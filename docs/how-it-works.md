@@ -5,6 +5,7 @@ Brutus reads an initial snapshot followed by three snapshots about one second ap
 ## The counters
 
 - **Process CPU and memory:** libproc `proc_pid_rusage`, including physical footprint, resident memory, and cumulative CPU time. CPU ticks are converted with the Mach timebase.
+- **Per-process swap:** a read-only task name port supplies `TASK_VM_INFO`'s `ledger_swapins` and compressed-memory accounting. Brutus releases each port immediately, computes swap-in bytes/second over three intervals, and reports unavailable counters as unknown.
 - **Identity:** libproc BSD process information supplies owner, parent PID, and native start seconds/microseconds.
 - **System CPU and VM:** Mach host counters plus sysctl memory pressure, RAM capacity, swap usage, and core count.
 - **Storage:** IOKit block-storage byte counters provide read/write rates. `statfs` on the Data volume provides space remaining.
@@ -19,9 +20,15 @@ For each eligible PID:
 ```text
 score = median footprint / installed RAM
       + CPU weight × average CPU / (100 × logical cores)
+      + pressure-only swap-in rate / (32 MiB/s)
+      + pressure-only positive footprint growth / (64 MiB/s)
 ```
 
 CPU weight is 0.25 when memory pressure is elevated or active swap transfers reach 32 MiB/s; otherwise it is 1. The maximum list is three processes, and candidates with a score below 0.01 are omitted. The list may contain fewer than three when too few eligible processes stand out.
+
+The two pressure-only terms apply under elevated memory pressure or at least 32 MiB/s of swap transfers. Swap-in rates require three valid intervals; footprint growth is the net byte change divided by the sample duration. These weights prioritize swap readers and new memory demand alongside existing footprint and CPU use.
+
+**Swap in** measures the process reclaiming previously swapped pages, in logical bytes before compression. It does not measure its total SSD swap allocation or identify which process forced other pages out. Compressed-memory accounting also uses logical bytes and can include pages held in compressed RAM or on disk. These are evidence for choosing a candidate, rather than proof of blame. See Apple's [task VM counters](https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/task_info.h), [swap-in ledger](https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/task.c), and [compressor accounting](https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/vm/vm_compressor.c).
 
 The display's processor percentage is a share of the whole Mac. The info view also exposes CPU as a share of one core, which can exceed 100% for a multithreaded process.
 
@@ -48,4 +55,4 @@ Before and after snapshots measure the resulting system state. Memory and swap m
 
 ## What Brutus doesn't do
 
-Brutus does not trace which process generated each swap transfer. It correlates system pressure with sustained per-process resource usage to offer candidates. It does not delete files or caches, manage launch services, prevent helpers from restarting, or run in the background after it exits.
+Brutus measures per-process swap readbacks, but does not trace the cause of every system swap-out. It correlates system pressure with sustained per-process resource usage to offer candidates. It does not delete files or caches, manage launch services, prevent helpers from restarting, or run in the background after it exits.

@@ -17,7 +17,7 @@ Each harness can spawn agents, tool calls, build processes, dev servers, and bro
 
 I wanted a smaller intervention: find the individual subprocess that’s seizing the Mac and stop that one. Where an agent or harness can retry the failed work, it can handle that recovery while the other jobs have a chance to carry on. Brutus targets the PID you choose; the surrounding agent or app handles what happens next.
 
-Brutus samples resource usage for about three seconds and offers the top three individual processes, with their launch commands, memory, and CPU use. RAM, swap, SSD space left, and active memory transfers stay visible. Press **I** for the full command, working folder, and technical details to help recognize the job before stopping it.
+Brutus samples resource usage for about three seconds and offers the top three individual processes, with their launch commands, memory, CPU use, and **Swap in** rate. Under memory pressure, active swap readbacks and growing memory use influence the ranking. RAM, swap, SSD space left, and active memory transfers stay visible. Press **I** for the full command, working folder, and compressed-memory details to help recognize the job before stopping it.
 
 ## Why “Brutus”?
 
@@ -34,8 +34,6 @@ Install and make `brutus` available immediately:
 ```sh
 curl -fsSL https://raw.githubusercontent.com/smashah/brutus/main/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"
 ```
-
-The [installer](install.sh) checks the release archive's SHA-256 and installs into `~/.local/bin` without sudo. It saves PATH for future terminals when needed; the `export` makes it available in this terminal immediately. This command works in zsh and bash.
 
 Run `brutus --dry-run` to try every menu action without closing anything, or `brutus` to choose a process to close. Set `BRUTUS_INSTALL_DIR` to choose another directory and use that directory in the `export` too.
 
@@ -65,6 +63,7 @@ In the info view, arrows scroll and **I** or **Esc** returns to the list. More c
 brutus                          # Top three, sampled over three intervals
 brutus 1                        # Only the top candidate
 brutus --dry-run                # Try the menu without sending signals
+brutus --no-animation           # Skip the dagger animation
 brutus scan                     # Print a report and exit
 brutus inspect 12345            # Details for a specific PID
 brutus close 12345              # Close only this PID
@@ -101,7 +100,9 @@ Brutus sends signals only to the PIDs you choose, never to a process group or ap
 
 The launch command and working folder give you context for identifying a job. Brutus does not automatically attribute every process to a particular subagent or harness.
 
-After a close request, it measures the Mac again and reports before/after pressure, memory, swap, transfers, CPU, process count, and SSD space. A private JSON report is saved under `~/.local/state/brutus/`; launch commands are not saved in these reports. If a process remains, Brutus says so and shows how to force that PID to close.
+Interactive closes get a brief dagger sweep, red particle burst, and **GAME OVER** banner when the process stops. Preview it with `--dry-run`, or skip it with `--no-animation`.
+
+After a close request, it measures the Mac again and reports the change in free RAM, before/after pressure, memory, swap, transfers, CPU, process count, and SSD space. A private JSON report is saved under `~/.local/state/brutus/`; launch commands are not saved in these reports. If a process remains, Brutus says so and shows how to force that PID to close.
 
 The candidates are leads, not proof of which process caused a freeze. Closing a subprocess can interrupt its work, its window, or jobs that depend on it. Some agents and apps can retry or restart that work, but recovery depends on your setup; Brutus doesn’t implement it. It does not delete files, clear caches, disable services, or promise instant swap reclamation.
 

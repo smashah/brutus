@@ -30,16 +30,16 @@
 #define MIB (1024.0 * 1024.0)
 #define GIB (1024.0 * 1024.0 * 1024.0)
 #ifndef BRUTUS_VERSION
-#define BRUTUS_VERSION "0.1.0"
+#define BRUTUS_VERSION "0.1.1"
 #endif
 
 typedef struct {
     pid_t pid, parent;
     uid_t uid;
-    uint64_t start_sec, start_usec, cpu_ticks;
-    double resident, footprint, memory[3], cpu[3], score;
-    int samples, status;
-    bool readable, app_main, protected;
+    uint64_t start_sec, start_usec, cpu_ticks, swapin_bytes;
+    double resident, footprint, initial_footprint, growth, compressed, memory[3], cpu[3], swapin[3], score;
+    int samples, swap_samples, status;
+    bool readable, swap_readable, app_main, protected;
     char name[64];
 } Process;
 
@@ -55,12 +55,13 @@ typedef struct {
 } State;
 
 typedef struct { Process *items; size_t count; State state; } Snapshot;
-typedef struct { bool dry, force, verbose, json, interactive; int count, target_count; const char *action, *targets[3]; } Options;
+typedef struct { bool dry, force, verbose, json, interactive, no_animation; int count, target_count; const char *action, *targets[3]; } Options;
 static uid_t user_uid;
 static host_t host;
 static double ticks_to_ns;
 static volatile sig_atomic_t terminal_active;
 static struct termios saved_terminal;
+static void end_terminal(void);
 
 static bool colors_enabled(void) {
     const char *term = getenv("TERM");
@@ -71,7 +72,9 @@ static const char *ink(const char *color) { return colors_enabled() ? color : ""
 #define MUTED "\033[90m"
 #define CYAN "\033[1;36m"
 #define BOLD "\033[1m"
+#define RED "\033[1;31m"
 #define SELECTED "\033[1;30;46m"
+#define SELECTOR "🗡️"
 static const char *health_ink(int level) {
     const char *colors[] = {"\033[1;32m", "\033[1;33m", "\033[1;31m"};
     return colors[level];
@@ -93,6 +96,12 @@ static size_t text_character(const char *text, int *columns) {
     if (length == (size_t)-1 || length == (size_t)-2 || !length) { *columns = 1; return 1; }
     *columns = wcwidth(wc);
     if (*columns < 0) *columns = 1;
+    // The dagger's emoji presentation occupies two terminal cells. Consume its
+    // variation selector with the base character so padding stays aligned.
+    if (wc == 0x1F5E1 && !strncmp(text + length, "\xEF\xB8\x8F", 3)) {
+        *columns = 2;
+        length += 3;
+    }
     return length;
 }
 static void panel_text(const char *text, int width) {
@@ -392,6 +401,18 @@ static State read_state(void) {
     s.time = now();
     return s;
 }
+static void read_process_swap(Process *process) {
+    mach_port_t name_port = MACH_PORT_NULL;
+    if (task_name_for_pid(mach_task_self(), process->pid, &name_port) != KERN_SUCCESS || name_port == MACH_PORT_NULL) return;
+    task_vm_info_data_t vm = {0};
+    mach_msg_type_number_t count = TASK_VM_INFO_REV6_COUNT;
+    kern_return_t result = task_info(name_port, TASK_VM_INFO, (task_info_t)&vm, &count);
+    mach_port_deallocate(mach_task_self(), name_port);
+    if (result != KERN_SUCCESS || count < TASK_VM_INFO_REV6_COUNT || vm.ledger_swapins < 0) return;
+    process->swap_readable = true;
+    process->swapin_bytes = (uint64_t)vm.ledger_swapins;
+    process->compressed = vm.compressed;
+}
 static Snapshot read_snapshot(void) {
     int capacity = proc_listallpids(NULL, 0) + 512;
     if (capacity <= 512) fail("cannot enumerate processes");
@@ -413,6 +434,7 @@ static Snapshot read_snapshot(void) {
             if (proc_pid_rusage(p->pid, RUSAGE_INFO_V4, (rusage_info_t *)&usage) == 0) {
                 p->readable = true; p->cpu_ticks = usage.ri_user_time + usage.ri_system_time;
                 p->resident = usage.ri_resident_size; p->footprint = usage.ri_phys_footprint;
+                read_process_swap(p);
             }
             p->app_main = main_app(p);
         }
@@ -453,7 +475,13 @@ static Snapshot sample(bool announce) {
             Process *p = &current.items[i], *old = find_process(&previous, p->pid);
             if (!p->readable || !old || !old->readable || p->start_sec != old->start_sec || p->start_usec != old->start_usec) continue;
             p->samples = old->samples;
+            p->initial_footprint = old->samples ? old->initial_footprint : old->footprint;
             memcpy(p->memory, old->memory, sizeof(p->memory)); memcpy(p->cpu, old->cpu, sizeof(p->cpu));
+            p->swap_samples = old->swap_samples;
+            memcpy(p->swapin, old->swapin, sizeof(p->swapin));
+            if (p->swap_readable && old->swap_readable && p->swap_samples < 3 && p->swapin_bytes >= old->swapin_bytes) {
+                p->swapin[p->swap_samples++] = (double)(p->swapin_bytes - old->swapin_bytes) / elapsed;
+            }
             if (p->samples < 3 && p->cpu_ticks >= old->cpu_ticks) {
                 p->memory[p->samples] = p->footprint;
                 p->cpu[p->samples] = (p->cpu_ticks - old->cpu_ticks) * ticks_to_ns / 1e9 / elapsed * 100;
@@ -483,7 +511,12 @@ static Snapshot sample(bool announce) {
     for (size_t i = 0; i < previous.count; i++) {
         Process *p = &previous.items[i];
         if (p->samples == 3) {
+            p->growth = (p->footprint - p->initial_footprint) / s->seconds;
             p->footprint = median(p->memory); p->score = p->footprint / s->ram + cpu_weight * (p->cpu[0] + p->cpu[1] + p->cpu[2]) / 3 / (100 * s->cores);
+            if (s->pressure >= 2 || s->paging_in + s->paging_out >= 32 * MIB) {
+                if (p->swap_samples == 3) p->score += (p->swapin[0] + p->swapin[1] + p->swapin[2]) / 3 / (32 * MIB);
+                if (p->growth > 0) p->score += p->growth / (64 * MIB);
+            }
         }
     }
     struct rusage_info_v4 own;
@@ -491,6 +524,14 @@ static Snapshot sample(bool announce) {
     return previous;
 }
 static double mean_cpu(const Process *p) { return p->samples ? (p->cpu[0] + p->cpu[1] + p->cpu[2]) / p->samples : 0; }
+static double mean_swapin(const Process *p) { return p->swap_samples == 3 ? (p->swapin[0] + p->swapin[1] + p->swapin[2]) / 3 : 0; }
+static const char *process_swap_rate(const Process *p, char buffer[32]) {
+    if (p->swap_samples != 3) snprintf(buffer, 32, "unavailable");
+    else if (mean_swapin(p) == 0) snprintf(buffer, 32, "0 MB/s");
+    else if (mean_swapin(p) < 0.1 * MIB) snprintf(buffer, 32, "<0.1 MB/s");
+    else snprintf(buffer, 32, "%.1f MB/s", mean_swapin(p) / MIB);
+    return buffer;
+}
 static int candidates(Snapshot *s, Process out[3], int count) {
     int found = 0;
     for (int rank = 0; rank < count; rank++) {
@@ -530,13 +571,15 @@ static void show_process(const Process *p, int number, bool verbose, int cores) 
         printf("%s\n", name);
         double busy = mean_cpu(p) / cores;
         printf("   Memory: %s. Processor: ", friendly_size(p->footprint, bytes));
-        if (busy < 1) puts("less than 1% of your Mac."); else printf("%.0f%% of your Mac.\n", busy);
+        if (busy < 1) printf("less than 1%% of your Mac."); else printf("%.0f%% of your Mac.", busy);
+        char swap_rate[32]; printf(" Swap in: %s.\n", process_swap_rate(p, swap_rate));
         print_process_command(p);
         return;
     }
     char bytes[32];
     if (number > 0) printf("[%d] ", number);
-    printf("%s · PID %d · %s · CPU %.1f%%\n", p->name, p->pid, size_text(p->footprint, bytes), mean_cpu(p));
+    char swap_rate[32];
+    printf("%s · PID %d · %s · CPU %.1f%% · Swap in %s\n", p->name, p->pid, size_text(p->footprint, bytes), mean_cpu(p), process_swap_rate(p, swap_rate));
     print_process_command(p);
     if (verbose) {
         char path[PROC_PIDPATHINFO_MAXSIZE] = {0}; struct proc_vnodepathinfo vnode;
@@ -568,7 +611,11 @@ static void json_report(const Snapshot *s, Process offered[3], int count) {
     for (int i = 0; i < count; i++) {
         if (i) printf(",");
         printf("{\"pid\":%d,\"parent_pid\":%d,\"name\":", offered[i].pid, offered[i].parent); json_string(stdout, offered[i].name);
-        printf(",\"memory\":%.0f,\"resident\":%.0f,\"cpu\":%.3f,\"samples\":%d}", offered[i].footprint, offered[i].resident, mean_cpu(&offered[i]), offered[i].samples);
+        printf(",\"memory\":%.0f,\"resident\":%.0f,\"cpu\":%.3f,\"samples\":%d,\"memory_growth_rate\":%.3f,\"swap_in_samples\":%d,\"swap_in_rate\":", offered[i].footprint, offered[i].resident, mean_cpu(&offered[i]), offered[i].samples, offered[i].growth, offered[i].swap_samples);
+        if (offered[i].swap_samples == 3) printf("%.3f", mean_swapin(&offered[i])); else printf("null");
+        printf(",\"compressed_logical_bytes\":");
+        if (offered[i].swap_readable) printf("%.0f", offered[i].compressed); else printf("null");
+        printf("}");
     }
     printf("]}\n");
 }
@@ -577,18 +624,20 @@ static void compare_states(const State *before, const State *after, bool verbose
         if (isatty(STDOUT_FILENO)) {
             health_panel(after);
             panel_edge(true, CYAN); panel_row(CYAN, CYAN, "RESULT  ·  BEFORE → AFTER");
+            panel_row(CYAN, BOLD, "Free RAM change       %+.0f MB", (after->free_ram - before->free_ram) / MIB);
             panel_row(CYAN, "", "Memory pressure       %s → %s", memory_status(before->pressure), memory_status(after->pressure));
             panel_row(CYAN, "", "Thrashing             %s → %s", thrashing(before), thrashing(after));
             panel_row(CYAN, "", "Memory in use         %.1f → %.1f GB", (before->ram - before->free_ram) / GIB, (after->ram - after->free_ram) / GIB);
             panel_row(CYAN, "", "Swap used             %.1f → %.1f GB", before->swap_used / GIB, after->swap_used / GIB);
             if (before->space_known && after->space_known) panel_row(CYAN, "", "SSD space free        %.1f → %.1f GB", before->free_disk / GIB, after->free_disk / GIB);
             panel_row(CYAN, "", "Memory/disk transfers %.0f → %.0f MB/s", (before->paging_in + before->paging_out) / MIB, (after->paging_in + after->paging_out) / MIB);
-            panel_row(CYAN, "", "Processor busy        %.0f%% → %.0f%%", before->cpu_user + before->cpu_system, after->cpu_user + after->cpu_system);
-            panel_row(CYAN, "", "Total processes       %d → %d", before->total, after->total);
+            panel_row(CYAN, "", "Processor busy        %.0f%% → %.0f%% (%+.0f points)", before->cpu_user + before->cpu_system, after->cpu_user + after->cpu_system, after->cpu_user + after->cpu_system - before->cpu_user - before->cpu_system);
+            panel_row(CYAN, "", "Total processes       %d → %d (%+d)", before->total, after->total, after->total - before->total);
             panel_edge(false, CYAN); return;
         }
         show_health(after);
         puts("\nWhat changed:");
+        printf("  Free RAM change:        %+.0f MB\n", (after->free_ram - before->free_ram) / MIB);
         printf("  Memory pressure:        %s -> %s\n", memory_status(before->pressure), memory_status(after->pressure));
         printf("  Memory in use:          %.1f -> %.1f GB\n", (before->ram - before->free_ram) / GIB, (after->ram - after->free_ram) / GIB);
         printf("  Disk used as memory:    %.1f -> %.1f GB\n", before->swap_used / GIB, after->swap_used / GIB);
@@ -599,6 +648,7 @@ static void compare_states(const State *before, const State *after, bool verbose
         return;
     }
     printf("\nBEFORE → AFTER\nThrashing %s → %s · pressure %s → %s\n", thrashing(before), thrashing(after), pressure(before->pressure), pressure(after->pressure));
+    printf("Free RAM change: %+.0f MiB\n", (after->free_ram - before->free_ram) / MIB);
     printf("Swap %.2f → %.2f GiB · paging %.0f → %.0f MiB/s\n", before->swap_used / GIB, after->swap_used / GIB, (before->paging_in + before->paging_out) / MIB, (after->paging_in + after->paging_out) / MIB);
     printf("RAM %.1f → %.1f GiB · kernel CPU %.0f → %.0f%% · processes %d → %d\n", (before->ram - before->free_ram) / GIB, (after->ram - after->free_ram) / GIB, before->cpu_system, after->cpu_system, before->total, after->total);
     if (verbose) { puts("\nFull before state:"); show_state(before, true); puts("\nFull after state:"); show_state(after, true); }
@@ -622,34 +672,118 @@ static void save_report(const State *before, const State *after, Process selecte
     if (fclose(f) != 0) fail("could not finish writing report");
     printf("Report: %s\n", filename);
 }
+static void close_scene(const Process *process, bool preview, const char *status) {
+    char name[128], memory[32]; friendly_name(process, name);
+    printf("\033[H\033[2J  %sBRUTUS · %s%s\n\n", ink(CYAN), preview ? "PREVIEW · NOTHING CLOSED" : "TARGETED CLOSE", ink(RESET));
+    panel_edge(true, CYAN);
+    for (int row = 0; row < 7; row++) panel_row(CYAN, "", "");
+    panel_edge(false, CYAN);
+    panel_edge(true, CYAN);
+    panel_row(CYAN, BOLD, "%s · PID %d", name, process->pid);
+    panel_row(CYAN, "", "Process footprint: %s", friendly_size(process->footprint, memory));
+    panel_row(CYAN, "", "%s", status);
+    panel_edge(false, CYAN);
+    printf("\033[7;7H%s", ink(BOLD)); panel_text(name, panel_width() - 10);
+    fputs(ink(RESET), stdout);
+}
+static void dagger_sweep(const Process *process, bool preview) {
+    int span = panel_width() - 14;
+    for (int frame = 0; frame < 10; frame++) {
+        close_scene(process, preview, preview ? "Previewing the dagger sweep..." : "Requesting this process to close...");
+        int column = 7 + span * frame / 9;
+        printf("\033[7;%dH%s━━%s%s", column, ink(RED), SELECTOR, ink(RESET));
+        fflush(stdout); pause_seconds(0.025);
+    }
+}
+static void game_over_banner(void) {
+    int left = 3 + panel_width() / 2 - 10;
+    printf("\033[7;4H"); panel_text("", panel_width() - 2);
+    printf("\033[6;%dH%s╭──────────────────╮", left, ink(RED));
+    printf("\033[7;%dH│    GAME OVER     │", left);
+    printf("\033[8;%dH╰──────────────────╯%s", left, ink(RESET));
+}
+static void dagger_pop(const Process *process, bool preview) {
+    int center = 3 + panel_width() / 2;
+    for (int frame = 1; frame <= 12; frame++) {
+        close_scene(process, preview, preview ? "Animation preview. Nothing was closed." : "Process stopped. Checking resource changes...");
+        // Erase the process line, then scatter a small deterministic blood burst.
+        printf("\033[7;4H"); panel_text("", panel_width() - 2);
+        for (int particle = 0; particle < 30; particle++) {
+            int column = center + ((particle * 17 % 37) - 18) * frame / 10;
+            int row = 7 + ((particle * 7 % 11) - 5) * frame / 16 + frame * frame / 120;
+            if (row >= 4 && row <= 10 && column >= 5 && column < panel_width()) {
+                const char *drop[] = {"●", "·", "*"};
+                printf("\033[%d;%dH%s%s%s", row, column, ink(RED), drop[particle % 3], ink(RESET));
+            }
+        }
+        if (frame >= 8) game_over_banner();
+        fflush(stdout); pause_seconds(0.025);
+    }
+    pause_seconds(0.45);
+}
+static void wait_for_close(Process selected[3], int count) {
+    double deadline = now() + 3;
+    while (now() < deadline) {
+        bool running = false;
+        for (int i = 0; i < count; i++) if (same_process(&selected[i], true)) running = true;
+        if (!running) return;
+        pause_seconds(0.05);
+    }
+}
 static int terminate(Process selected[3], int count, const Options *options) {
     for (int i = 0; i < count; i++) {
         if (selected[i].protected || selected[i].uid != user_uid) fail("this is a main app or your current session. Run brutus to choose an individual helper instead");
     }
-    for (int i = 0; i < count; i++) {
-        char name[128]; friendly_name(&selected[i], name);
-        printf("%s %s", options->dry ? "Would close" : "Selected:", name);
-        if (options->verbose) printf(" (PID %d)", selected[i].pid);
-        puts(".");
-    }
-    if (options->dry) { panel_notice("PREVIEW COMPLETE", "Nothing was closed.", CYAN); return 0; }
-    printf("\n%s[1/3] BEFORE%s  Measuring your Mac before closing...\n", ink(CYAN), ink(RESET)); fflush(stdout);
-    Snapshot before = sample(false); int term = 0, killed = 0, skipped = 0, errors = 0;
-    printf("%s[2/3] CLOSING%s  Requesting only the selected processes...\n", ink(CYAN), ink(RESET)); fflush(stdout);
-    for (int i = 0; i < count; i++) {
-        if (!same_process(&selected[i], true)) { skipped++; continue; }
-        if (kill(selected[i].pid, SIGTERM) == 0) term++;
-        else if (errno != ESRCH) { fprintf(stderr, "PID %d: %s\n", selected[i].pid, strerror(errno)); errors++; }
-    }
-    pause_seconds(3);
-    if (options->force) {
-        for (int i = 0; i < count; i++) if (same_process(&selected[i], true)) {
-            if (kill(selected[i].pid, SIGKILL) == 0) killed++;
-            else if (errno != ESRCH) { fprintf(stderr, "PID %d: %s\n", selected[i].pid, strerror(errno)); errors++; }
+    bool animate = terminal_active && !options->no_animation && colors_enabled() && panel_width() >= 36 && terminal_rows() >= 17;
+    if (!animate && terminal_active) end_terminal();
+    if (!animate) {
+        for (int i = 0; i < count; i++) {
+            char name[128]; friendly_name(&selected[i], name);
+            printf("%s %s", options->dry ? "Would close" : "Selected:", name);
+            if (options->verbose) printf(" (PID %d)", selected[i].pid);
+            puts(".");
         }
     }
-    printf("%s[3/3] AFTER%s  Checking your Mac again...\n", ink(CYAN), ink(RESET)); fflush(stdout);
+    if (options->dry) {
+        if (animate) {
+            for (int i = 0; i < count; i++) { dagger_sweep(&selected[i], true); dagger_pop(&selected[i], true); }
+            end_terminal();
+        }
+        panel_notice("PREVIEW COMPLETE", "Nothing was closed.", CYAN); return 0;
+    }
+    if (animate) close_scene(&selected[0], false, "Measuring resources before closing...");
+    else printf("\n%s[1/3] BEFORE%s  Measuring your Mac before closing...\n", ink(CYAN), ink(RESET));
+    fflush(stdout);
+    Snapshot before = sample(false); int term = 0, killed = 0, skipped = 0, errors = 0;
+    bool requested[3] = {false};
+    if (!animate) printf("%s[2/3] CLOSING%s  Requesting only the selected processes...\n", ink(CYAN), ink(RESET));
+    fflush(stdout);
+    for (int i = 0; i < count; i++) {
+        if (!same_process(&selected[i], true)) { skipped++; continue; }
+        if (animate) dagger_sweep(&selected[i], false);
+        if (!same_process(&selected[i], true)) { skipped++; continue; }
+        if (kill(selected[i].pid, SIGTERM) == 0) { term++; requested[i] = true; }
+        else if (errno != ESRCH) { fprintf(stderr, "PID %d: %s\n", selected[i].pid, strerror(errno)); errors++; }
+    }
+    if (animate) { close_scene(&selected[count - 1], false, "Waiting for the selected process to stop..."); fflush(stdout); }
+    wait_for_close(selected, count);
+    if (options->force) {
+        for (int i = 0; i < count; i++) if (same_process(&selected[i], true)) {
+            if (kill(selected[i].pid, SIGKILL) == 0) { killed++; requested[i] = true; }
+            else if (errno != ESRCH) { fprintf(stderr, "PID %d: %s\n", selected[i].pid, strerror(errno)); errors++; }
+        }
+        if (killed) wait_for_close(selected, count);
+    }
+    if (animate) {
+        for (int i = 0; i < count; i++) if (requested[i] && !same_process(&selected[i], true)) dagger_pop(&selected[i], false);
+        bool stopped = requested[count - 1] && !same_process(&selected[count - 1], true);
+        close_scene(&selected[count - 1], false, stopped ? "Process stopped. Measuring resource changes..." : "Measuring resources after the close request...");
+        if (stopped) game_over_banner();
+    }
+    else printf("%s[3/3] AFTER%s  Checking your Mac again...\n", ink(CYAN), ink(RESET));
+    fflush(stdout);
     Snapshot after = sample(false); int survivors = 0;
+    if (animate) end_terminal();
     for (int i = 0; i < count; i++) {
         char name[128]; friendly_name(&selected[i], name);
         if (same_process(&selected[i], true)) {
@@ -773,6 +907,13 @@ static int show_information(const State *s, const Process *p, const Command *com
         info_add(&info, false, "CPU: %.2f%% of your Mac · %.1f%% of one core", mean_cpu(p) / s->cores, mean_cpu(p));
         info_add(&info, false, "3 CPU samples (one core): %.1f%% / %.1f%% / %.1f%%", p->cpu[0], p->cpu[1], p->cpu[2]);
         info_add(&info, false, "3 memory samples (GB): %.2f / %.2f / %.2f", p->memory[0] / GIB, p->memory[1] / GIB, p->memory[2] / GIB);
+        char swap_rate[32];
+        info_add(&info, true, "SWAP EVIDENCE");
+        info_add(&info, false, "Swap-in readback: %s · %d / 3 intervals", process_swap_rate(p, swap_rate), p->swap_samples);
+        if (p->swap_readable) info_add(&info, false, "Compressed/swapped pages: %.2f GB before compression", p->compressed / GIB);
+        info_add(&info, false, "Memory footprint change: %+.1f MB/s", p->growth / MIB);
+        info_add(&info, false, "Swap-in measures this process reclaiming previously swapped pages.");
+        info_add(&info, false, "It does not identify who forced pages out of RAM.");
         info_add(&info, false, "Scope: only PID %d will receive a close request.", p->pid);
         if (same_process(p, true)) {
             char path[PROC_PIDPATHINFO_MAXSIZE] = {0}; struct proc_vnodepathinfo vnode;
@@ -829,7 +970,7 @@ static int keyboard_menu(Snapshot *snapshot, Process offered[3], int count, Opti
         } else if (commands) {
             panel_edge(true, CYAN); panel_row(CYAN, CYAN, "MORE COMMANDS");
             const char *labels[] = {"Check your Mac again", "Show the top process", "Show the top three processes", "See technical details", "Close all shown processes", "Force close the selected helper", "Back"};
-            for (int i = 0; i < 7; i++) panel_row(CYAN, i == command_cursor ? SELECTED : "", "%s %s%s", i == command_cursor ? "▸" : " ", labels[i], (i == 4 || i == 5) && !count ? " (none available)" : i == 4 && count == 1 ? " (one shown)" : "");
+            for (int i = 0; i < 7; i++) panel_row(CYAN, i == command_cursor ? SELECTED : "", "%s %s%s", i == command_cursor ? SELECTOR : "  ", labels[i], (i == 4 || i == 5) && !count ? " (none available)" : i == 4 && count == 1 ? " (one shown)" : "");
             if (count) { char name[128]; friendly_name(&offered[cursor], name); panel_row(CYAN, "", "Selected: %s", name); }
             panel_edge(false, CYAN);
         } else {
@@ -837,16 +978,17 @@ static int keyboard_menu(Snapshot *snapshot, Process offered[3], int count, Opti
             int required_rows = 1 + 6 + 1 + count * 5 + (panel_width() < 36 ? 5 : panel_width() < 64 ? 4 : 3);
             bool compact = terminal_rows() <= required_rows;
             for (int i = 0; i < count; i++) {
-                char name[128], memory[32]; friendly_name(&offered[i], name);
+                char name[128], memory[32], swap_rate[32]; friendly_name(&offered[i], name);
                 const char *border = i == cursor ? CYAN : MUTED;
                 if (!compact || i == 0) panel_edge(true, border);
-                panel_row(border, i == cursor ? SELECTED : "", "%s %d. %s", i == cursor ? "▸" : " ", i + 1, name);
+                panel_row(border, i == cursor ? SELECTED : "", "%s %d. %s", i == cursor ? SELECTOR : "  ", i + 1, name);
                 double cpu = mean_cpu(&offered[i]) / snapshot->state.cores;
                 char processor[32];
                 if (cpu < 1) snprintf(processor, sizeof(processor), "<1%%");
                 else snprintf(processor, sizeof(processor), "%.0f%%", cpu);
-                panel_row(border, "", "  Memory %s  ·  Processor %s", friendly_size(offered[i].footprint, memory), processor);
-                panel_row(border, MUTED, "  Command: %s", launch[i].full ? launch[i].preview : launch[i].unavailable);
+                if (panel_width() >= 64) panel_row(border, "", "   Memory %s · CPU %s · Swap in %s", friendly_size(offered[i].footprint, memory), processor, process_swap_rate(&offered[i], swap_rate));
+                else panel_row(border, "", "   Mem %s CPU %s Swap in %s", friendly_size(offered[i].footprint, memory), processor, process_swap_rate(&offered[i], swap_rate));
+                panel_row(border, MUTED, "   Command: %s", launch[i].full ? launch[i].preview : launch[i].unavailable);
                 if (!compact || i == count - 1) panel_edge(false, border);
             }
             if (!count) panel_notice("NO HELPER STOOD OUT", "Nothing closed. Press R to check again.", CYAN);
@@ -880,12 +1022,12 @@ static int keyboard_menu(Snapshot *snapshot, Process offered[3], int count, Opti
                     if (!count) continue;
                     *selected_count = count;
                     for (int i = 0; i < count; i++) selected[i] = offered[i];
-                    end_terminal(); return finish_menu(launch, MENU_CLOSE);
+                    return finish_menu(launch, MENU_CLOSE);
                 case 5: if (!count) continue; options->force = true; break;
                 case 6: commands = false; continue;
             }
         }
-        if (count) { *selected_count = 1; selected[0] = offered[cursor]; end_terminal(); return finish_menu(launch, MENU_CLOSE); }
+        if (count) { *selected_count = 1; selected[0] = offered[cursor]; return finish_menu(launch, MENU_CLOSE); }
     }
 }
 static void usage(void) {
@@ -895,6 +1037,7 @@ static void usage(void) {
          "  brutus 3               Show up to three (the default)\n"
          "  brutus scan            Print a report and exit\n\n"
          "  brutus --version       Print the installed version\n\n"
+         "  brutus --no-animation  Skip the dagger animation\n\n"
          "Close a specific process using the number in its suggested command:\n"
          "  brutus close 12345\n"
          "  brutus close 12345 --dry-run   Preview without closing anything\n"
@@ -912,6 +1055,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--force")) options.force = true;
         else if (!strcmp(argv[i], "--verbose")) options.verbose = true;
         else if (!strcmp(argv[i], "--json")) options.json = true;
+        else if (!strcmp(argv[i], "--no-animation")) options.no_animation = true;
         else if (!strcmp(argv[i], "--version") || !strcmp(argv[i], "-V")) { printf("brutus %s\n", BRUTUS_VERSION); return 0; }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) { usage(); return 0; }
         else if (argv[i][0] == '-' || positions == 4) { usage(); return 1; }

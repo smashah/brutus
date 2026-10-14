@@ -1,10 +1,10 @@
 # Terminal preview provenance
 
-`brutus.svg` renders an actual 80-column, 24-row terminal capture of Brutus 0.1.0 running in `--dry-run` mode on 2026-10-14. The traffic-light state, system metrics, candidate resource values, and controls come from the running program.
+`brutus.svg` renders an actual 80-column terminal capture of Brutus 0.1.1 running in `--dry-run` mode on 2026-10-14. The traffic-light state, system metrics, candidate resource values, per-process swap-in rates, and controls come from the running program.
 
 The local account path and project name were redacted for publication. The SVG adds the project title and a terminal frame, and maps ANSI styles to readable colors on a dark background. It does not show a fabricated recovery or a process close.
 
-The header's 183 KiB is the size of the shipped universal executable (187,344 bytes), including Apple silicon and Intel slices.
+The header rounds the shipped universal executable's size to KiB, including Apple silicon and Intel slices. The dagger marker, its spacing, and the per-process swap rates come from the current CLI.
 
 The artwork uses [Paper Mono 1.000](https://github.com/paper-design/paper-mono/releases/tag/v1.000), Regular and Bold. The webfonts are included under `fonts/` with their [SIL Open Font License](fonts/OFL.txt), and embedded in the SVG so the typography doesn't depend on installed fonts. The terminal keeps its original 12-unit character grid.
 

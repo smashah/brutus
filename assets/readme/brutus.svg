@@ -19,7 +19,7 @@
 </g>
 <g font-family="Paper Mono,monospace" font-size="20" style="font-variant-ligatures: none; white-space: pre;" xml:space="preserve" letter-spacing="-0.1199951171875">
 <text x="84" y="308" fill="#e6edf3" font-weight="400">  </text>
-<text x="108" y="308" fill="#6bdded" font-weight="700">BRUTUS 0.1.0  ·  PREVIEW  ·  sampled 3.0s                                   </text>
+<text x="108" y="308" fill="#6bdded" font-weight="700">BRUTUS 0.1.1  ·  PREVIEW  ·  sampled 3.1s                                   </text>
 <text x="84" y="336" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="336" fill="#f7c66d" font-weight="700">╭──────────────────────────────────────────────────────────────────────────╮</text>
 <text x="84" y="364" fill="#e6edf3" font-weight="400">  </text>
@@ -32,11 +32,11 @@
 <text x="1008" y="392" fill="#f7c66d" font-weight="700">│</text>
 <text x="84" y="420" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="420" fill="#f7c66d" font-weight="700">│</text>
-<text x="120" y="420" fill="#e6edf3" font-weight="400"> Memory 15.5 / 16 GB  ·  Processor 90% busy                               </text>
+<text x="120" y="420" fill="#e6edf3" font-weight="400"> Memory 15.8 / 16 GB  ·  Processor 46% busy                               </text>
 <text x="1008" y="420" fill="#f7c66d" font-weight="700">│</text>
 <text x="84" y="448" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="448" fill="#f7c66d" font-weight="700">│</text>
-<text x="120" y="448" fill="#f7c66d" font-weight="700"> Swap 28.9 GB  ·  SSD 17.0 GB free — LOW                                  </text>
+<text x="120" y="448" fill="#f7c66d" font-weight="700"> Swap 29.8 GB  ·  SSD 15.0 GB free — LOW                                  </text>
 <text x="1008" y="448" fill="#f7c66d" font-weight="700">│</text>
 <text x="84" y="476" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="476" fill="#f7c66d" font-weight="700">╰──────────────────────────────────────────────────────────────────────────╯</text>
@@ -47,39 +47,39 @@
 <text x="84" y="560" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="560" fill="#6bdded" font-weight="700">│</text>
 <rect x="120" y="539" width="888" height="28" fill="#6bdded"/>
-<text x="120" y="560" fill="#071219" font-weight="700"> ▸ 1. Codex window helper                                                 </text>
+<text x="120" y="560" fill="#071219" font-weight="700"><tspan x="132" font-family="Apple Color Emoji,Noto Color Emoji,sans-serif" font-size="22">🗡️</tspan><tspan x="156"> 1. Discord Helper                                                     </tspan></text>
 <text x="1008" y="560" fill="#6bdded" font-weight="700">│</text>
 <text x="84" y="588" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="588" fill="#6bdded" font-weight="700">│</text>
-<text x="120" y="588" fill="#e6edf3" font-weight="400">   Memory 2.3 GB  ·  Processor &lt;1%                                        </text>
+<text x="120" y="588" fill="#e6edf3" font-weight="400">    Memory 204 MB · CPU &lt;1% · Swap in 5.0 MB/s                            </text>
 <text x="1008" y="588" fill="#6bdded" font-weight="700">│</text>
 <text x="84" y="616" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="616" fill="#6bdded" font-weight="700">│</text>
-<text x="120" y="616" fill="#9caabd" font-weight="400">   Command: 'Codex (Renderer)' --type=renderer '--user-data-dir=/Users/you</text>
+<text x="120" y="616" fill="#9caabd" font-weight="400">    Command: 'Discord Helper' --type=gpu-process '--user-data-dir=/Users… </text>
 <text x="1008" y="616" fill="#6bdded" font-weight="700">│</text>
 <text x="84" y="644" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="644" fill="#9caabd" font-weight="400">│</text>
-<text x="120" y="644" fill="#e6edf3" font-weight="400">   2. example-app background task                                         </text>
+<text x="120" y="644" fill="#e6edf3" font-weight="400">    2. OpenKnowledge Helper                                               </text>
 <text x="1008" y="644" fill="#9caabd" font-weight="400">│</text>
 <text x="84" y="672" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="672" fill="#9caabd" font-weight="400">│</text>
-<text x="120" y="672" fill="#e6edf3" font-weight="400">   Memory 1.9 GB  ·  Processor &lt;1%                                        </text>
+<text x="120" y="672" fill="#e6edf3" font-weight="400">    Memory 228 MB · CPU 3% · Swap in 9.2 MB/s                             </text>
 <text x="1008" y="672" fill="#9caabd" font-weight="400">│</text>
 <text x="84" y="700" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="700" fill="#9caabd" font-weight="400">│</text>
-<text x="120" y="700" fill="#9caabd" font-weight="400">   Command: node /Users/you/projects/example-app/apps/webapp/node_mod…    </text>
+<text x="120" y="700" fill="#9caabd" font-weight="400">    Command: 'open-knowledge-server example' '' ''                        </text>
 <text x="1008" y="700" fill="#9caabd" font-weight="400">│</text>
 <text x="84" y="728" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="728" fill="#9caabd" font-weight="400">│</text>
-<text x="120" y="728" fill="#e6edf3" font-weight="400">   3. Codex background task                                               </text>
+<text x="120" y="728" fill="#e6edf3" font-weight="400">    3. Codex window helper                                                </text>
 <text x="1008" y="728" fill="#9caabd" font-weight="400">│</text>
 <text x="84" y="756" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="756" fill="#9caabd" font-weight="400">│</text>
-<text x="120" y="756" fill="#e6edf3" font-weight="400">   Memory 1.2 GB  ·  Processor 1%                                         </text>
+<text x="120" y="756" fill="#e6edf3" font-weight="400">    Memory 2.3 GB · CPU &lt;1% · Swap in 0.1 MB/s                            </text>
 <text x="1008" y="756" fill="#9caabd" font-weight="400">│</text>
 <text x="84" y="784" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="784" fill="#9caabd" font-weight="400">│</text>
-<text x="120" y="784" fill="#9caabd" font-weight="400">   Command: codex -c features.code_mode_host=true app-server --analytics… </text>
+<text x="120" y="784" fill="#9caabd" font-weight="400">    Command: 'Codex (Renderer)' --type=renderer '--user-data-dir=/Users/… </text>
 <text x="1008" y="784" fill="#9caabd" font-weight="400">│</text>
 <text x="84" y="812" fill="#e6edf3" font-weight="400">  </text>
 <text x="108" y="812" fill="#9caabd" font-weight="400">╰──────────────────────────────────────────────────────────────────────────╯</text>
