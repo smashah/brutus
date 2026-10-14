@@ -51,7 +51,7 @@ An interactive selection carries its owner and start timestamp into the close op
 
 Direct `brutus close PID` commands take a fresh snapshot of the PID supplied; they do not remember an identity from an earlier invocation. The command will refuse a target identified as protected in that snapshot.
 
-Before and after snapshots measure the resulting system state. Memory and swap may take time to settle, and another app can restart its helper. The report records observed survivors, skipped identities, errors, and sent signals. Report files are created with mode 0600; command arguments are not stored.
+Before and after snapshots measure the resulting system state. Memory and swap may take time to settle, and another app can restart its helper. The terminal summary is always shown. Saving a JSON report requires `--save-report` and is off by default. The file records before/after metrics, target PIDs, observed survivors, skipped identities, errors, and sent signals. Report files are created with mode 0600 under `~/.local/state/brutus/`; command arguments are not stored. Saved reports have no automatic expiry.
 
 ## What Brutus doesn't do
 

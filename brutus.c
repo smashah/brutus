@@ -30,7 +30,7 @@
 #define MIB (1024.0 * 1024.0)
 #define GIB (1024.0 * 1024.0 * 1024.0)
 #ifndef BRUTUS_VERSION
-#define BRUTUS_VERSION "0.1.1"
+#define BRUTUS_VERSION "0.1.2"
 #endif
 
 typedef struct {
@@ -55,7 +55,7 @@ typedef struct {
 } State;
 
 typedef struct { Process *items; size_t count; State state; } Snapshot;
-typedef struct { bool dry, force, verbose, json, interactive, no_animation; int count, target_count; const char *action, *targets[3]; } Options;
+typedef struct { bool dry, force, verbose, json, interactive, no_animation, save_report; int count, target_count; const char *action, *targets[3]; } Options;
 static uid_t user_uid;
 static host_t host;
 static double ticks_to_ns;
@@ -793,7 +793,7 @@ static int terminate(Process selected[3], int count, const Options *options) {
     }
     compare_states(&before.state, &after.state, options->verbose);
     if (options->verbose) printf("%d TERM, %d KILL, %d survivors.\n", term, killed, survivors);
-    save_report(&before.state, &after.state, selected, count, term, killed, survivors, skipped, errors);
+    if (options->save_report) save_report(&before.state, &after.state, selected, count, term, killed, survivors, skipped, errors);
     free(before.items); free(after.items);
     return survivors || errors ? 1 : 0;
 }
@@ -1037,7 +1037,8 @@ static void usage(void) {
          "  brutus 3               Show up to three (the default)\n"
          "  brutus scan            Print a report and exit\n\n"
          "  brutus --version       Print the installed version\n\n"
-         "  brutus --no-animation  Skip the dagger animation\n\n"
+         "  brutus --no-animation  Skip the dagger animation\n"
+         "  brutus --save-report   Save a private JSON file after a close (off by default)\n\n"
          "Close a specific process using the number in its suggested command:\n"
          "  brutus close 12345\n"
          "  brutus close 12345 --dry-run   Preview without closing anything\n"
@@ -1056,6 +1057,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--verbose")) options.verbose = true;
         else if (!strcmp(argv[i], "--json")) options.json = true;
         else if (!strcmp(argv[i], "--no-animation")) options.no_animation = true;
+        else if (!strcmp(argv[i], "--save-report")) options.save_report = true;
         else if (!strcmp(argv[i], "--version") || !strcmp(argv[i], "-V")) { printf("brutus %s\n", BRUTUS_VERSION); return 0; }
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) { usage(); return 0; }
         else if (argv[i][0] == '-' || positions == 4) { usage(); return 1; }

@@ -2,7 +2,7 @@
 
 Repository: [smashah/brutus](https://github.com/smashah/brutus)
 
-Release: [Brutus 0.1.1](https://github.com/smashah/brutus/releases/tag/v0.1.1)
+Release: [Brutus 0.1.2](https://github.com/smashah/brutus/releases/tag/v0.1.2)
 
 This is a fact sheet and release handoff. Write the HN title and opening comment in your own words: [HN asks for human-written text and no automated posting](https://news.ycombinator.com/newsguidelines.html). [Show HN expects a working thing people can try](https://news.ycombinator.com/showhn.html), so publish the repository and downloadable release before submitting the link.
 
@@ -40,6 +40,8 @@ Published on 2026-10-14 under MIT with `main` as the default branch and annotate
 The universal executable is 187,344 bytes (183 KiB); the compressed binary archive is about 49 KiB. The installer downloaded the public release archive, matched its SHA-256, and installed into a separate local directory. That downloaded build displayed Brutus 0.1.0's three-candidate preview menu with launch commands and exited with Q without closing any other process.
 
 Brutus 0.1.1 adds the dagger selector and a short native terminal animation with a GAME OVER banner for stopped targets. The installed release was run in colored `--dry-run` mode and previewed the sweep, particle burst, and banner without sending signals. The before/after report adds the net change in free RAM, CPU percentage points, and process count. The installer and Homebrew formula point to 0.1.1.
+
+Brutus 0.1.2 makes saving report files opt-in with `--save-report`. Normal closes still show the before/after terminal summary without creating a file. Saved reports have no automatic expiry. The installer, Homebrew formula, and agent skill now describe 0.1.2.
 
 The per-process swap-in counters were read from the actual Mac through read-only task name ports. A subsequent three-interval preview displayed each candidate's swap-in rate and supplied the refreshed README image. Unavailable counters are shown as unknown; swap readers and footprint growth influence ranking under memory pressure. Per-process readbacks do not identify who caused every swap-out.
 

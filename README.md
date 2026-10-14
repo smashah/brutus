@@ -68,6 +68,7 @@ brutus scan                     # Print a report and exit
 brutus inspect 12345            # Details for a specific PID
 brutus close 12345              # Close only this PID
 brutus close 12345 --force      # TERM, then KILL if it remains after 3 seconds
+brutus close 12345 --save-report # Also save the before/after JSON to disk
 brutus --json                   # Read-only JSON report
 brutus --version
 ```
@@ -102,7 +103,9 @@ The launch command and working folder give you context for identifying a job. Br
 
 Interactive closes get a brief dagger sweep, red particle burst, and **GAME OVER** banner when the process stops. Preview it with `--dry-run`, or skip it with `--no-animation`.
 
-After a close request, it measures the Mac again and reports the change in free RAM, before/after pressure, memory, swap, transfers, CPU, process count, and SSD space. A private JSON report is saved under `~/.local/state/brutus/`; launch commands are not saved in these reports. If a process remains, Brutus says so and shows how to force that PID to close.
+After a close request, it measures the Mac again and reports the change in free RAM, before/after pressure, memory, swap, transfers, CPU, process count, and SSD space. If a process remains, Brutus says so and shows how to force that PID to close.
+
+Saving reports to disk is off by default. Add `--save-report` to save a private before/after JSON file under `~/.local/state/brutus/`; launch commands are not stored. Saved reports remain until you delete them, with no automatic expiry. `--json` prints a read-only sample to stdout without saving a file.
 
 The candidates are leads, not proof of which process caused a freeze. Closing a subprocess can interrupt its work, its window, or jobs that depend on it. Some agents and apps can retry or restart that work, but recovery depends on your setup; Brutus doesn’t implement it. It does not delete files, clear caches, disable services, or promise instant swap reclamation.
 

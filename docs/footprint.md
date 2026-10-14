@@ -20,4 +20,4 @@ The running command was `brutus --dry-run`, including the interactive menu, a re
 
 The initial check and refresh used about 1.2–2.1% of one core averaged over their sample windows, or roughly 0.15–0.27% of this Mac's eight-core capacity. Individual short bursts can be higher. A universal distribution binary contains two architecture slices, so its file size is larger than the native development binary above.
 
-These describe one real session on a pressured Mac. Process count, argument length, OS version, architecture, and workload affect the result. Closing a process also writes the private before/after report, so the zero-write observation does not cover a close operation.
+These describe one real session on a pressured Mac. Process count, argument length, OS version, architecture, and workload affect the result. At the time of these measurements, closing a process also wrote the private before/after report, so the zero-write observation does not cover a close operation. Saving reports now requires `--save-report` and is off by default.

@@ -2,7 +2,7 @@
 # Download a versioned release, check its SHA-256, and install without sudo.
 set -eu
 
-version=0.1.1
+version=0.1.2
 repository=smashah/brutus
 prefix=${BRUTUS_INSTALL_DIR:-"$HOME/.local/bin"}
 
