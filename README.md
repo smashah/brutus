@@ -2,6 +2,10 @@
 
 **Find the subprocess seizing your Mac, and choose exactly what to stop.**
 
+![Brutus showing memory pressure, swap and SSD space, three process choices, and keyboard controls](assets/readme/brutus.png)
+
+*Captured from the running CLI in preview mode. Local project names and paths are redacted; resource values are real.*
+
 I’m still using a MacBook I bought several years ago, and I want to squeeze every last drop of productivity out of it. With agents working in parallel, that increasingly means keeping a small army of subprocesses from overwhelming the machine.
 
 Each harness can spawn agents, tool calls, build processes, dev servers, and browser helpers. When resource usage goes insane, it’s hard to work out which subprocess belongs to which job. The usual response is to find the biggest number in Activity Monitor or Stats and kill the whole parent process, which interrupts other jobs and leaves you starting them back up.
@@ -11,10 +15,6 @@ I wanted a smaller intervention: find the individual subprocess that’s seizing
 Brutus samples resource usage for about three seconds and offers the top three individual processes, with their launch commands, memory, and CPU use. RAM, swap, SSD space left, and active memory transfers stay visible. Press **I** for the full command, working folder, and technical details to help recognize the job before stopping it.
 
 **[Try it](#try-it)** · [Download the release](https://github.com/smashah/brutus/releases/latest) · [How it works](docs/how-it-works.md)
-
-![Brutus showing memory pressure, swap and SSD space, three process choices, and keyboard controls](assets/readme/brutus.png)
-
-*Captured from the running CLI in preview mode. Local project names and paths are redacted; resource values are real.*
 
 ## Why “Brutus”?
 
