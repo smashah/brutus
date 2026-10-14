@@ -1,4 +1,4 @@
-# Brutus
+# 🗡️ Brutus
 
 **Find the subprocess seizing your Mac, and choose exactly what to stop.**
 
