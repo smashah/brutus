@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1015" viewBox="0 0 1200 1015" role="img" aria-labelledby="title desc">
+<title id="title">Brutus: find the processes slowing your Mac</title>
+<desc id="desc">Real preview-mode terminal capture showing memory pressure, RAM, swap, SSD headroom, three individual process choices with commands, and keyboard controls. Local project names and paths are redacted.</desc>
+<rect width="1200" height="1015" rx="24" fill="#080d14"/>
+<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">
+<text x="64" y="58" font-size="19" fill="#a6b4c6">macOS · native C · MIT</text>
+<text x="64" y="142" font-size="74" font-weight="700" fill="#6bdded">Brutus</text>
+<text x="64" y="193" font-size="31" fill="#e6edf3">Find what’s slowing your Mac.</text>
+<rect x="48" y="236" width="1104" height="704" rx="16" fill="#101720" stroke="#293443"/>
+<circle cx="76" cy="260" r="6" fill="#f38b82"/><circle cx="98" cy="260" r="6" fill="#f7c66d"/><circle cx="120" cy="260" r="6" fill="#8bd49c"/>
+<text x="600" y="267" text-anchor="middle" font-size="16" fill="#a6b4c6">brutus --dry-run</text>
+<text x="64" y="982" font-size="18" fill="#a6b4c6">Captured from the running CLI. Local names and paths redacted. Nothing closed.</text>
+</g>
+<g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="20" style="font-variant-ligatures:none" xml:space="preserve">
+<text x="84" y="308" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="308" fill="#6bdded" font-weight="700">BRUTUS 0.1.0  ·  PREVIEW  ·  sampled 3.0s                                   </text>
+<text x="84" y="336" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="336" fill="#f7c66d" font-weight="700">╭──────────────────────────────────────────────────────────────────────────╮</text>
+<text x="84" y="364" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="364" fill="#f7c66d" font-weight="700">│</text>
+<text x="120" y="364" fill="#f7c66d" font-weight="700"> ● AMBER  ·  MEMORY IS TIGHT                                              </text>
+<text x="1008" y="364" fill="#f7c66d" font-weight="700">│</text>
+<text x="84" y="392" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="392" fill="#f7c66d" font-weight="700">│</text>
+<text x="120" y="392" fill="#e6edf3" font-weight="400"> No heavy swapping. Closing a helper is optional.                         </text>
+<text x="1008" y="392" fill="#f7c66d" font-weight="700">│</text>
+<text x="84" y="420" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="420" fill="#f7c66d" font-weight="700">│</text>
+<text x="120" y="420" fill="#e6edf3" font-weight="400"> Memory 15.5 / 16 GB  ·  Processor 90% busy                               </text>
+<text x="1008" y="420" fill="#f7c66d" font-weight="700">│</text>
+<text x="84" y="448" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="448" fill="#f7c66d" font-weight="700">│</text>
+<text x="120" y="448" fill="#f7c66d" font-weight="700"> Swap 28.9 GB  ·  SSD 17.0 GB free — LOW                                  </text>
+<text x="1008" y="448" fill="#f7c66d" font-weight="700">│</text>
+<text x="84" y="476" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="476" fill="#f7c66d" font-weight="700">╰──────────────────────────────────────────────────────────────────────────╯</text>
+<text x="84" y="504" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="504" fill="#e6edf3" font-weight="700">CHOOSE A HELPER TO PREVIEW</text>
+<text x="84" y="532" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="532" fill="#6bdded" font-weight="700">╭──────────────────────────────────────────────────────────────────────────╮</text>
+<text x="84" y="560" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="560" fill="#6bdded" font-weight="700">│</text>
+<rect x="120" y="539" width="888" height="28" fill="#6bdded"/>
+<text x="120" y="560" fill="#071219" font-weight="700"> ▸ 1. Codex window helper                                                 </text>
+<text x="1008" y="560" fill="#6bdded" font-weight="700">│</text>
+<text x="84" y="588" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="588" fill="#6bdded" font-weight="700">│</text>
+<text x="120" y="588" fill="#e6edf3" font-weight="400">   Memory 2.3 GB  ·  Processor &lt;1%                                        </text>
+<text x="1008" y="588" fill="#6bdded" font-weight="700">│</text>
+<text x="84" y="616" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="616" fill="#6bdded" font-weight="700">│</text>
+<text x="120" y="616" fill="#9caabd" font-weight="400">   Command: &#x27;Codex (Renderer)&#x27; --type=renderer &#x27;--user-data-dir=/Users/you</text>
+<text x="1008" y="616" fill="#6bdded" font-weight="700">│</text>
+<text x="84" y="644" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="644" fill="#9caabd" font-weight="400">│</text>
+<text x="120" y="644" fill="#e6edf3" font-weight="400">   2. example-app background task                                         </text>
+<text x="1008" y="644" fill="#9caabd" font-weight="400">│</text>
+<text x="84" y="672" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="672" fill="#9caabd" font-weight="400">│</text>
+<text x="120" y="672" fill="#e6edf3" font-weight="400">   Memory 1.9 GB  ·  Processor &lt;1%                                        </text>
+<text x="1008" y="672" fill="#9caabd" font-weight="400">│</text>
+<text x="84" y="700" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="700" fill="#9caabd" font-weight="400">│</text>
+<text x="120" y="700" fill="#9caabd" font-weight="400">   Command: node /Users/you/projects/example-app/apps/webapp/node_mod…    </text>
+<text x="1008" y="700" fill="#9caabd" font-weight="400">│</text>
+<text x="84" y="728" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="728" fill="#9caabd" font-weight="400">│</text>
+<text x="120" y="728" fill="#e6edf3" font-weight="400">   3. Codex background task                                               </text>
+<text x="1008" y="728" fill="#9caabd" font-weight="400">│</text>
+<text x="84" y="756" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="756" fill="#9caabd" font-weight="400">│</text>
+<text x="120" y="756" fill="#e6edf3" font-weight="400">   Memory 1.2 GB  ·  Processor 1%                                         </text>
+<text x="1008" y="756" fill="#9caabd" font-weight="400">│</text>
+<text x="84" y="784" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="784" fill="#9caabd" font-weight="400">│</text>
+<text x="120" y="784" fill="#9caabd" font-weight="400">   Command: codex -c features.code_mode_host=true app-server --analytics… </text>
+<text x="1008" y="784" fill="#9caabd" font-weight="400">│</text>
+<text x="84" y="812" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="812" fill="#9caabd" font-weight="400">╰──────────────────────────────────────────────────────────────────────────╯</text>
+<text x="84" y="840" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="840" fill="#6bdded" font-weight="700">╭──────────────────────────────────────────────────────────────────────────╮</text>
+<text x="84" y="868" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="868" fill="#6bdded" font-weight="700">│</text>
+<text x="120" y="868" fill="#e6edf3" font-weight="700"> ↑↓ Choose · Enter Preview · I Info · R Check · M More · Q Quit           </text>
+<text x="1008" y="868" fill="#6bdded" font-weight="700">│</text>
+<text x="84" y="896" fill="#e6edf3" font-weight="400">  </text>
+<text x="108" y="896" fill="#6bdded" font-weight="700">╰──────────────────────────────────────────────────────────────────────────╯</text>
+</g></svg>
