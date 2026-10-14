@@ -33,6 +33,24 @@ install -S -m 755 "$task_tmp/brutus" "$prefix/brutus"
 printf '\nInstalled: %s/brutus\n' "$prefix"
 case ":$PATH:" in
     *":$prefix:"*) printf '%s\n' 'Run: brutus' ;;
-    *) printf 'Run: "%s/brutus"\n' "$prefix"
-       printf 'To add it to your PATH, put this in your shell configuration:\n  export PATH="%s:$PATH"\n' "$prefix" ;;
+    *)
+        case "${SHELL:-/bin/sh}" in
+            */zsh) task_profile="${ZDOTDIR:-$HOME}/.zshrc" ;;
+            */bash) task_profile="$HOME/.bash_profile" ;;
+            *) task_profile="$HOME/.profile" ;;
+        esac
+        # Escape the directory as shell text; preserve the future shell's $PATH.
+        task_path_entry=$(printf '%s' "$prefix" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\$/\\$/g; s/`/\\`/g')
+        task_path_line="export PATH=\"$task_path_entry:\$PATH\""
+        if ! grep -Fq -- "$task_path_line" "$task_profile" 2>/dev/null; then
+            mkdir -p "${task_profile%/*}"
+            if printf '\n# Brutus\ncase ":$PATH:" in\n    *":%s:"*) ;;\n    *) %s ;;\nesac\n' \
+                "$task_path_entry" "$task_path_line" >> "$task_profile"; then
+                printf 'PATH saved in %s for future terminals.\n' "$task_profile"
+            else
+                printf 'Could not save PATH in %s.\n' "$task_profile" >&2
+            fi
+        fi
+        printf 'For this terminal: %s\n' "$task_path_line"
+        ;;
 esac

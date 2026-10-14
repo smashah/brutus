@@ -47,6 +47,6 @@ FORMULA
 source_archive="brutus-v$version-source.tar.gz"
 COPYFILE_DISABLE=1 tar --uid 0 --gid 0 --uname root --gname wheel \
     -czf "$dist/$source_archive" -C "$project_dir" \
-    brutus.c VERSION Makefile LICENSE README.md install.sh scripts docs assets Formula .gitignore
+    brutus.c VERSION Makefile LICENSE README.md install.sh scripts skills docs assets Formula .gitignore
 (cd "$dist" && shasum -a 256 "$source_archive" > "$source_archive.sha256")
 printf '\nRelease files: %s\n' "$dist"

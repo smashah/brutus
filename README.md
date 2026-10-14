@@ -26,15 +26,15 @@ The goal is to get more useful work out of the Mac I already have, with fewer in
 
 macOS only. The release binary contains Apple silicon and Intel slices and targets macOS 12 or newer. Runtime measurements were taken on Apple silicon; an Intel machine has not been exercised yet.
 
-Download the installer so you can read it before running it:
+Install and make `brutus` available immediately:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/smashah/brutus/main/install.sh -o install-brutus.sh
-sh install-brutus.sh
-~/.local/bin/brutus --dry-run
+curl -fsSL https://raw.githubusercontent.com/smashah/brutus/main/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"
 ```
 
-The installer checks the release archive's SHA-256 and installs into `~/.local/bin` without sudo. Preview mode lets you try every menu action without closing anything. Run `brutus` when you're ready to close a process. Set `BRUTUS_INSTALL_DIR` to choose another directory.
+The [installer](install.sh) checks the release archive's SHA-256 and installs into `~/.local/bin` without sudo. It saves PATH for future terminals when needed; the `export` makes it available in this terminal immediately. This command works in zsh and bash.
+
+Run `brutus --dry-run` to try every menu action without closing anything, or `brutus` to choose a process to close. Set `BRUTUS_INSTALL_DIR` to choose another directory and use that directory in the `export` too.
 
 Prefer Homebrew?
 
@@ -69,6 +69,18 @@ brutus close 12345 --force      # TERM, then KILL if it remains after 3 seconds
 brutus --json                   # Read-only JSON report
 brutus --version
 ```
+
+## For agents
+
+The small [Brutus skill](skills/brutus/SKILL.md) tells agents when to investigate sustained Mac stalls, how to sample without an interactive menu, and how to target one subprocess within the user's authorization. It doesn't run in the background or automatically close the biggest process.
+
+For Codex, install the reference with:
+
+```sh
+mkdir -p ~/.codex/skills/brutus && curl -fsSL https://raw.githubusercontent.com/smashah/brutus/main/skills/brutus/SKILL.md -o ~/.codex/skills/brutus/SKILL.md
+```
+
+For other harnesses, put the same `brutus/SKILL.md` in their skills directory.
 
 ## What the lights mean
 

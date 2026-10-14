@@ -19,6 +19,7 @@ This is a fact sheet and release handoff. Write the HN title and opening comment
 - The utility is native C, using libproc, Mach, sysctl, and IOKit without helper commands, an interpreter, or a daemon.
 - The development build measured 3.2 MiB peak physical footprint, about 37–66 ms of CPU work per check, and no measurable idle CPU. The universal release has two slices; do not use the native build's 71.5 KiB as its download size.
 - Development was assisted by Codex, with the behavior and interface iterated against the actual Mac workload.
+- The curl install command makes `brutus` available immediately and saves PATH for future terminals when needed. An optional short agent skill covers sustained stalls, read-only sampling, and authorized targeting of an individual helper.
 - MIT licensed. Mac-only for now. Intel is included in the binary but has not been exercised on an Intel machine.
 
 Useful feedback areas: process labeling, pressure thresholds, terminal readability, and real-world behavior when apps restart their helpers.
@@ -34,7 +35,7 @@ Useful feedback areas: process labeling, pressure thresholds, terminal readabili
 
 ## Publication record
 
-Published on 2026-10-14 under MIT with `main` as the default branch and annotated tag `v0.1.0`. The repository includes the terminal preview, installer, Homebrew formula, source/build instructions, resource measurements, and threshold/identity notes.
+Published on 2026-10-14 under MIT with `main` as the default branch and annotated tag `v0.1.0`. The repository includes the terminal preview, installer, Homebrew formula, source/build instructions, resource measurements, and threshold/identity notes. Subsequent updates on `main` add the one-line installation recipe and optional agent skill; the original release artifacts remain as published.
 
 The universal executable is 187,344 bytes (183 KiB); the compressed binary archive is about 49 KiB. The installer downloaded the public release archive, matched its SHA-256, and installed into a separate local directory. That downloaded build displayed Brutus 0.1.0's three-candidate preview menu with launch commands and exited with Q without closing any other process.
 
