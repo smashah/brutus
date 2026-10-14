@@ -2,6 +2,8 @@
 
 **Find the subprocess seizing your Mac, and choose exactly what to stop.**
 
+**[Installation](#installation)** · [Download the release](https://github.com/smashah/brutus/releases/latest) · [How it works](docs/how-it-works.md)
+
 ![Brutus showing memory pressure, swap and SSD space, three process choices, and keyboard controls](assets/readme/brutus.png)
 
 *Captured from the running CLI in preview mode. Local project names and paths are redacted; resource values are real.*
@@ -14,15 +16,13 @@ I wanted a smaller intervention: find the individual subprocess that’s seizing
 
 Brutus samples resource usage for about three seconds and offers the top three individual processes, with their launch commands, memory, and CPU use. RAM, swap, SSD space left, and active memory transfers stay visible. Press **I** for the full command, working folder, and technical details to help recognize the job before stopping it.
 
-**[Try it](#try-it)** · [Download the release](https://github.com/smashah/brutus/releases/latest) · [How it works](docs/how-it-works.md)
-
 ## Why “Brutus”?
 
 A process that’s **seizing** your Mac is a **seizer**, which sounds suspiciously like **Caesar**. Hence Brutus: one small, surgical intervention aimed at freeing up the machine while sparing the rest of the workload.
 
 The goal is to get more useful work out of the Mac I already have, with fewer interruptions to the agents working on it.
 
-## Try it
+## Installation
 
 macOS only. The release binary contains Apple silicon and Intel slices and targets macOS 12 or newer. Runtime measurements were taken on Apple silicon; an Intel machine has not been exercised yet.
 

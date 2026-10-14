@@ -13,4 +13,4 @@ Keep unrelated agent jobs running by targeting a specific subprocess. Brutus is 
 4. Within existing authorization to stop that job, run `brutus close PID` for the specific offending helper. Without that authorization, show the candidate and resource evidence to the user first. Preserve the harness, parent app, and unrelated work; don't use `pkill` or kill a process tree. Use `--force` only for an authorized target that survives TERM, rather than making it the default.
 5. Summarize Brutus's before/after resource report and whether the PID stopped. Private JSON reports live in `~/.local/state/brutus/`. Recovery belongs to the surrounding agent or app; it isn't guaranteed, and swap may stay allocated after pressure improves. Don't repeatedly resample a struggling Mac without a reason.
 
-`brutus close PID --dry-run` previews a close without signals. If Brutus is missing, use the [installation instructions](https://github.com/smashah/brutus#try-it).
+`brutus close PID --dry-run` previews a close without signals. If Brutus is missing, use the [installation instructions](https://github.com/smashah/brutus#installation).
