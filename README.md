@@ -2,9 +2,14 @@
 
 **Find the subprocess seizing your Mac, and choose exactly what to stop.**
 
-**[Installation](#installation)** · [Download the release](https://github.com/smashah/brutus/releases/latest) · [How it works](docs/how-it-works.md)
-
 ![Brutus showing memory pressure, swap and SSD space, three process choices, and keyboard controls](assets/readme/brutus.png)
+
+<p align="center">
+  <a href="#installation"><strong>Installation</strong></a> ·
+  <a href="https://github.com/smashah/brutus/releases/latest">Download the release</a> ·
+  <a href="docs/how-it-works.md">How it works</a> ·
+  <a href="skills/brutus/SKILL.md">Agent skill</a>
+</p>
 
 *Captured from the running CLI in preview mode. Local project names and paths are redacted; resource values are real.*
 
