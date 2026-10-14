@@ -1,6 +1,8 @@
 # Show HN launch brief
 
-Publication target: `https://github.com/smashah/brutus`
+Repository: [smashah/brutus](https://github.com/smashah/brutus)
+
+Release: [Brutus 0.1.0](https://github.com/smashah/brutus/releases/tag/v0.1.0)
 
 This is a fact sheet and release handoff. Write the HN title and opening comment in your own words: [HN asks for human-written text and no automated posting](https://news.ycombinator.com/newsguidelines.html). [Show HN expects a working thing people can try](https://news.ycombinator.com/showhn.html), so publish the repository and downloadable release before submitting the link.
 
@@ -26,11 +28,19 @@ Useful feedback areas: process labeling, pressure thresholds, terminal readabili
 - Swap totals may remain high after pressure improves. SSD free space already excludes existing swap use.
 - No cross-platform claims, fabricated before/after screenshot, or Intel runtime claim.
 
-## Local release artifacts
+## Publication record
+
+Published on 2026-10-14 under MIT with `main` as the default branch and annotated tag `v0.1.0`. The repository includes the terminal preview, installer, Homebrew formula, source/build instructions, resource measurements, and threshold/identity notes.
+
+The universal executable is 187,344 bytes (183 KiB); the compressed binary archive is about 49 KiB. The installer downloaded the public release archive, matched its SHA-256, and installed into a separate local directory. That downloaded build displayed Brutus 0.1.0's three-candidate preview menu with launch commands and exited with Q without closing any other process.
+
+Intel runtime behavior and a full Homebrew installation have not been exercised. No CI, lint, typecheck, or automated test workflows were added. The HN post has not been submitted.
+
+## Release artifacts
 
 `make dist` produces the universal binary archive, source archive, and a SHA-256 file for each under `dist/`. The binary archive includes Brutus, README, and MIT license. It is ad-hoc signed and targets macOS 12 or newer.
 
-The publishing commands below are intentionally manual. Preparing this folder does not publish the source, create a GitHub repository, or submit to HN.
+The first-release publishing commands below are recorded for provenance. They have already been run; they do not submit to HN.
 
 ```sh
 gh repo create smashah/brutus --public --source . --remote origin
@@ -44,4 +54,4 @@ gh release create v0.1.0 \
   --verify-tag --title 'Brutus 0.1.0' --notes-file docs/release-v0.1.0.md
 ```
 
-Once the release is public, the README's installer and Homebrew URLs become live. Actual remote installation and Intel runtime behavior remain unexercised until those paths are run. No CI, lint, typecheck, or automated test workflows were added.
+The README's installer and Homebrew URLs point to this published release. The installation recipe is deliberately separate from the utility: Brutus itself remains one native process with no helper commands.
