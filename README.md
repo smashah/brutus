@@ -11,8 +11,6 @@
   <a href="skills/brutus/SKILL.md">Agent skill</a>
 </p>
 
-*Captured from the running CLI in preview mode. Local project names and paths are redacted; resource values are real.*
-
 I’m still using a MacBook I bought several years ago, and I want to squeeze every last drop of productivity out of it. With agents working in parallel, that increasingly means keeping a small army of subprocesses from overwhelming the machine.
 
 Each harness can spawn agents, tool calls, build processes, dev servers, and browser helpers. When resource usage goes insane, it’s hard to work out which subprocess belongs to which job. The usual response is to find the biggest number in Activity Monitor or Stats and kill the whole parent process, which interrupts other jobs and leaves you starting them back up.
