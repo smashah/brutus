@@ -11,7 +11,7 @@
 <g font-family="Paper Mono,monospace">
 <text x="64" y="58" font-size="19" fill="#415651">macOS · native C · 183 KiB</text>
 <text x="64" y="142" font-size="74" font-weight="700" fill="#123d3b">Brutus</text>
-<text x="64" y="193" font-size="31" fill="#17302e">Find what’s slowing your Mac.</text>
+<text x="64" y="193" font-size="31" fill="#17302e">Find and Kill what's seizing your Mac</text>
 <rect x="48" y="244" width="1104" height="704" rx="16" fill="#123330" opacity="0.18"/><rect x="48" y="236" width="1104" height="704" rx="16" fill="#101720" stroke="#293443"/>
 <circle cx="76" cy="260" r="6" fill="#f38b82"/><circle cx="98" cy="260" r="6" fill="#f7c66d"/><circle cx="120" cy="260" r="6" fill="#8bd49c"/>
 <text x="600" y="267" text-anchor="middle" font-size="16" fill="#a6b4c6">brutus --dry-run</text>
