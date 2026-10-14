@@ -8,8 +8,11 @@ This is a fact sheet and release handoff. Write the HN title and opening comment
 
 ## Facts for your introduction
 
-- The trigger was a 16 GiB Mac seizing up under memory pressure, large swap usage, and many development/helper processes.
-- The goal was to find and close one specific helper, while giving the containing app a chance to recover.
+- The motivation is to squeeze more productivity out of a MacBook bought several years ago, while agents increasingly work in parallel.
+- Many harnesses, subagents, tool calls, build processes, dev servers, and browser helpers make it difficult to identify which individual subprocess is consuming resources.
+- Finding the biggest number in Activity Monitor or Stats and killing the parent interrupts unrelated jobs and creates more work restarting them.
+- The goal is one surgical stop of an individual subprocess. Where the surrounding agent or harness can retry failed work, it can handle the recovery while the other jobs have a chance to continue.
+- The name comes from a process “seizing” the Mac becoming a “seizer”, sounding like “Caesar”, with Brutus as the targeted intervention aimed at freeing the machine.
 - Three intervals are sampled; the default offers the top three individual PIDs rather than a single CPU spike or a whole app tree.
 - The main screen shows RAM, active swapping, swap used, SSD space remaining, CPU, the candidates, and their launch commands.
 - The info key exposes the full command and technical data; refresh replaces the existing view.
@@ -24,7 +27,8 @@ Useful feedback areas: process labeling, pressure thresholds, terminal readabili
 
 - Candidates suggest sustained resource use; the tool cannot prove which PID caused swapping or a freeze.
 - Main-app protection is a heuristic. Signals go to only the chosen PID, and start identity is rechecked.
-- Closing a helper can interrupt its work or window; recovery is controlled by the app.
+- Commands and working folders help identify jobs; automatic attribution to a particular harness or subagent is not implemented.
+- Closing a subprocess can interrupt its work, window, or dependent jobs. Recovery is controlled by the agent or app and is not guaranteed or implemented by Brutus.
 - Swap totals may remain high after pressure improves. SSD free space already excludes existing swap use.
 - No cross-platform claims, fabricated before/after screenshot, or Intel runtime claim.
 

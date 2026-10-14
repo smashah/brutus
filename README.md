@@ -1,12 +1,26 @@
 # Brutus
 
-**Find the processes slowing your Mac. Close the helper you choose.**
+**Find the subprocess seizing your Mac, and choose exactly what to stop.**
 
-Brutus samples your Mac for about three seconds, shows the top three individual processes, and waits for your choice. RAM, swap, SSD headroom, and active memory transfers stay visible. Press **I** for the full launch command and technical details.
+I’m still using a MacBook I bought several years ago, and I want to squeeze every last drop of productivity out of it. With agents working in parallel, that increasingly means keeping a small army of subprocesses from overwhelming the machine.
+
+Each harness can spawn agents, tool calls, build processes, dev servers, and browser helpers. When resource usage goes insane, it’s hard to work out which subprocess belongs to which job. The usual response is to find the biggest number in Activity Monitor or Stats and kill the whole parent process, which interrupts other jobs and leaves you starting them back up.
+
+I wanted a smaller intervention: find the individual subprocess that’s seizing the Mac and stop that one. Where an agent or harness can retry the failed work, it can handle that recovery while the other jobs have a chance to carry on. Brutus targets the PID you choose; the surrounding agent or app handles what happens next.
+
+Brutus samples resource usage for about three seconds and offers the top three individual processes, with their launch commands, memory, and CPU use. RAM, swap, SSD space left, and active memory transfers stay visible. Press **I** for the full command, working folder, and technical details to help recognize the job before stopping it.
+
+**[Try it](#try-it)** · [Download the release](https://github.com/smashah/brutus/releases/latest) · [How it works](docs/how-it-works.md)
 
 ![Brutus showing memory pressure, swap and SSD space, three process choices, and keyboard controls](assets/readme/brutus.png)
 
 *Captured from the running CLI in preview mode. Local project names and paths are redacted; resource values are real.*
+
+## Why “Brutus”?
+
+A process that’s **seizing** your Mac is a **seizer**, which sounds suspiciously like **Caesar**. Hence Brutus: one small, surgical intervention aimed at freeing up the machine while sparing the rest of the workload.
+
+The goal is to get more useful work out of the Mac I already have, with fewer interruptions to the agents working on it.
 
 ## Try it
 
@@ -70,13 +84,15 @@ The detailed view includes swap in/out, compression, disk throughput, kernel CPU
 
 Brutus sends signals only to the PIDs you choose, never to a process group or application tree. It excludes other users' processes, detected main GUI processes, and its own ancestors. Before each signal, it checks the process's owner and native start timestamp again.
 
+The launch command and working folder give you context for identifying a job. Brutus does not automatically attribute every process to a particular subagent or harness.
+
 After a close request, it measures the Mac again and reports before/after pressure, memory, swap, transfers, CPU, process count, and SSD space. A private JSON report is saved under `~/.local/state/brutus/`; launch commands are not saved in these reports. If a process remains, Brutus says so and shows how to force that PID to close.
 
-The candidates are leads, not proof of which process caused a freeze. Closing a helper can interrupt that helper's work or window, and its app decides whether to restart it. Brutus does not delete files, clear caches, disable services, or promise instant swap reclamation.
+The candidates are leads, not proof of which process caused a freeze. Closing a subprocess can interrupt its work, its window, or jobs that depend on it. Some agents and apps can retry or restart that work, but recovery depends on your setup; Brutus doesn’t implement it. It does not delete files, clear caches, disable services, or promise instant swap reclamation.
 
 ## Small on purpose
 
-One native C process reads macOS counters directly through libproc, Mach, sysctl, and IOKit. There is no interpreter, daemon, telemetry, or helper command. The menu blocks on keyboard input while idle.
+The thing helping a struggling Mac should leave room for the work you actually want to do. Brutus is one native C process reading macOS counters directly through libproc, Mach, sysctl, and IOKit, with no interpreter, daemon, telemetry, or helper command. The menu blocks on keyboard input while idle.
 
 The development build measured roughly **2.1 MiB idle / 3.2 MiB peak** physical memory footprint, with **37–66 ms of CPU work** per three-second check. Idle CPU was unmeasurable during a five-second observation. [Measurement details and build identity →](docs/footprint.md)
 
